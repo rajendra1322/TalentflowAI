@@ -34,29 +34,54 @@ export default function Jobs() {
   const canCreateJob = ["recruiter", "admin"].includes(role);
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-6">
+  <div className="px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+
         <div>
-          <h1 className="text-3xl font-bold">Jobs</h1>
-          <p className="text-slate-500">Manage all job openings</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            Jobs
+          </h1>
+
+          <p className="text-slate-500 text-sm sm:text-base">
+            Manage all job openings
+          </p>
         </div>
 
         {canCreateJob ? (
           <CreateJobDialog refresh={fetchJobs} />
         ) : (
-          <Button onClick={() => toast.error('Only recruiters can create jobs')} variant="outline">+ Create Job</Button>
+          <Button
+            onClick={() =>
+              toast.error("Only recruiters can create jobs")
+            }
+            variant="outline"
+          >
+            + Create Job
+          </Button>
         )}
       </div>
 
-      <div className="mb-4">
-        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search jobs..." />
+      {/* Search */}
+      <div className="mb-6">
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search jobs..."
+          className="h-11"
+        />
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+      {/* Table */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6">
 
         <JobTable jobs={jobs} />
 
       </div>
-    </>
-  );
+
+    </div>
+  </div>
+);
 }

@@ -50,33 +50,64 @@ export default function CreateJobDialog({ refresh }) {
                     <Button className="bg-sky-500 hover:bg-sky-600">+ Create Job</Button>
                 </DialogTrigger>
 
-                <DialogContent className="sm:max-w-[700px] rounded-3xl">
+                <DialogContent className="w-[95vw] max-w-[700px] rounded-3xl max-h-[90vh] overflow-y-auto">
 
-                <DialogHeader>
-                    <DialogTitle>Create New Job</DialogTitle>
-                </DialogHeader>
+  <DialogHeader>
+    <DialogTitle>Create New Job</DialogTitle>
+  </DialogHeader>
 
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
 
-                    <Input name="title" placeholder="Job Title" value={form.title} onChange={handleChange} />
-                    <Input name="company" placeholder="Company Name" value={form.company} onChange={handleChange} />
-                    <Input name="location" placeholder="Location" value={form.location} onChange={handleChange} />
-                    <Input name="skills" placeholder="Skills (React, Node.js, MongoDB)" value={form.skills} onChange={handleChange} />
+    <Input
+      name="title"
+      placeholder="Job Title"
+      value={form.title}
+      onChange={handleChange}
+    />
 
-                </div>
+    <Input
+      name="company"
+      placeholder="Company Name"
+      value={form.company}
+      onChange={handleChange}
+    />
 
-                <div className="mt-4">
-                    <Textarea name="description" placeholder="Job Description" value={form.description} onChange={handleChange} />
-                </div>
+    <Input
+      name="location"
+      placeholder="Location"
+      value={form.location}
+      onChange={handleChange}
+    />
 
-                <div className="flex justify-end mt-4">
+    <Input
+      name="skills"
+      placeholder="Skills (React, Node.js, MongoDB)"
+      value={form.skills}
+      onChange={handleChange}
+    />
 
-                    <Button onClick={handleSubmit} className="bg-sky-500 hover:bg-sky-600">Save Job</Button>
+  </div>
 
-                </div>
+  <div className="mt-4">
+    <Textarea
+      name="description"
+      placeholder="Job Description"
+      value={form.description}
+      onChange={handleChange}
+      className="min-h-[140px]"
+    />
+  </div>
 
-            </DialogContent>
+  <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4">
+    <Button
+      onClick={handleSubmit}
+      className="w-full sm:w-auto bg-sky-500 hover:bg-sky-600"
+    >
+      Save Job
+    </Button>
+  </div>
 
+</DialogContent>
         </Dialog>
     );
 }
