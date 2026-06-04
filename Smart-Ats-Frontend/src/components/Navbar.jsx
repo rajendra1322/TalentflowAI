@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import logo from "/home/rajendra/Smart_ATS/Smart-Ats-Frontend/src/assets/fnl.png"
+import logo from "@/assets/fnl.png";
 
 export default function Navbar() {
   const navigate = useNavigate();
