@@ -36,7 +36,6 @@ Setup Instructions
 1. Clone Repository
    
 git clone https://github.com/rajendra1322/TalentflowAI
-cd smarter-ats
 
 3. Install Dependencies
    
