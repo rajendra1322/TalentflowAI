@@ -93,10 +93,16 @@ export default function Register() {
             }
           />
 
-          <select className="w-full border p-3 rounded-xl mb-4" onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            <option>Recruiter</option>
-            <option>Candidate</option>
-            <option>Admin</option>
+          <select
+            className="w-full border p-3 rounded-xl mb-4"
+            value={form.role}
+            onChange={(e) =>
+              setForm({ ...form, role: e.target.value })
+            }
+          >
+            <option value="recruiter">Recruiter</option>
+            <option value="candidate">Candidate</option>
+            <option value="admin">Admin</option>
           </select>
 
           <button

@@ -28,16 +28,18 @@ export const register = async (
       await bcrypt.hash(password, 10);
 
     // normalize role (accept lowercase from client like 'candidate')
-    let normalizedRole = role;
-    if (role && typeof role === "string") {
-      normalizedRole = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
-    }
+    const allowedRoles = ["candidate", "recruiter", "admin"];
+
+    const normalizedRole =
+      role && allowedRoles.includes(role.toLowerCase())
+        ? role.toLowerCase()
+        : "candidate";
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: normalizedRole || "Candidate",
+      role: normalizedRole,
     });
 
     res.status(201).json({
