@@ -19,11 +19,14 @@ dotenv.config();
 
 const app = express();
 
-const CLIENT_URL = "talentflow--ai.vercel.app" || "http://localhost:5173";
+
 
 app.use(cors({
-  origin: CLIENT_URL,
-  credentials: true,
+  origin: [
+    "http://localhost:5173",
+    "https://talentflow--ai.vercel.app"
+  ],
+  credentials: true
 }));
 app.use(express.json());
 
