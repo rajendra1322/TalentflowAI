@@ -6,9 +6,9 @@ import { parseResume } from "../utils/resumeParser.js";
 import { extractSkills } from "../utils/extractSkills.js";
 import { sendMail } from "../utils/email.js";
 
-// ===============================
+
 // NORMALIZE SKILLS HELPER
-// ===============================
+
 const normalizeSkills = (skills) => {
     if (!skills) return [];
 
@@ -26,9 +26,9 @@ const normalizeSkills = (skills) => {
     return [];
 };
 
-// ===============================
+
 // ADD CANDIDATE
-// ===============================
+
 export const addCandidate = async (req, res) => {
     try {
         const { name, email, phone, skills, experience, jobId } = req.body;
@@ -78,9 +78,9 @@ export const addCandidate = async (req, res) => {
 
         const jobSkills = normalizeSkills(job.skills);
 
-        // ===============================
+        
         // SCORE + RECOMMENDATION
-        // ===============================
+       
         const matchScore = scoreCandidate(candidateSkills, jobSkills);
 
         const rec = getRecommendation(matchScore);
@@ -93,9 +93,9 @@ export const addCandidate = async (req, res) => {
         if (matchScore >= 85) status = "Interview";
         else if (matchScore >= 70) status = "Shortlisted";
 
-        // ===============================
+       
         // CREATE CANDIDATE
-        // ===============================
+      
         const candidate = await Candidate.create({
             name,
             email: normalizedEmail,
@@ -116,9 +116,9 @@ export const addCandidate = async (req, res) => {
     }
 };
 
-// ===============================
+
 // GET ALL CANDIDATES
-// ===============================
+
 export const getCandidates = async (req, res) => {
     try {
         const candidates = await Candidate.find().populate("jobId");
@@ -128,9 +128,9 @@ export const getCandidates = async (req, res) => {
     }
 };
 
-// ===============================
+
 // UPDATE STATUS
-// ===============================
+
 export const updateCandidateStatus = async (req, res) => {
     try {
         const { status } = req.body;
@@ -172,9 +172,8 @@ export const updateCandidateStatus = async (req, res) => {
     }
 };
 
-// ===============================
 // REPARSE RESUME
-// ===============================
+
 export const reparseCandidate = async (req, res) => {
     try {
         const { id } = req.params;
@@ -196,9 +195,9 @@ export const reparseCandidate = async (req, res) => {
     }
 };
 
-// ===============================
+
 // SEARCH CANDIDATES
-// ===============================
+
 export const searchCandidates = async (req, res) => {
     try {
         const { search, status, minScore, maxScore } = req.query;

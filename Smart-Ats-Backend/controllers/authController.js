@@ -33,7 +33,7 @@ export const register = async (
     const normalizedRole =
       role && allowedRoles.includes(role.toLowerCase())
         ? role.toLowerCase()
-        : "candidate";
+        : "recruiter";
 
     const user = await User.create({
       name,
