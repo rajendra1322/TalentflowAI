@@ -11,34 +11,41 @@ export default function PipelineBoard({ candidates = [], refresh = () => {}, job
   // no horizontal scrolling on mobile; columns stack vertically using CSS grid
 
   const moveCandidate = async (candidate, status) => {
-    try {
-      await api.put(`/candidates/${candidate._id}/status`, { status });
+  try {
+    await api.put(
+      `/candidates/${candidate._id}/status`,
+      { status }
+    );
 
-      if (status === "Interview") {
-        // simple email payload
-        const job = jobs.find((j) => String(j._id) === String(candidate.jobId));
-        const subject = `Interview Invitation - ${job?.title || "Opportunity"}`;
-        const sender = localStorage.getItem("name") || "Recruiting Team";
-        const html = "<p>Hi " + (candidate.name || "") + ",</p>" +
-          "<p>You have been invited to an interview." + (job ? (" Role: <strong>" + job.title + "</strong>") : "") + "</p>" +
-          "<p>Best regards,<br/>" + sender + "</p>";
-        const text = "Hi " + (candidate.name || "") + "\n\nYou have been invited to an interview.\n\nBest regards,\n" + sender;
+    // Immediate UI update
+    candidate.status = status;
 
-        try {
-          await api.post("/mail/send", { to: candidate.email, subject, text, html });
-          toast.success("Interview email sent to candidate");
-        } catch (mailErr) {
-          console.warn("Mail send failed:", mailErr?.message || mailErr);
-          toast.error("Failed to send interview email");
-        }
+    refresh();
+
+    if (status === "Interview") {
+      try {
+        await api.post("/mail/send", {
+          to: candidate.email,
+          subject: `Interview Invitation - ${candidate.jobId?.title || "Opportunity"}`,
+          text: `Hi ${candidate.name}, You have been shortlisted for an interview.`,
+          html: `
+            <h2>Interview Invitation</h2>
+            <p>Hi ${candidate.name},</p>
+            <p>You have been shortlisted for an interview.</p>
+          `,
+        });
+
+        toast.success("Interview email sent");
+      } catch (err) {
+        console.error(err);
+        toast.error("Email sending failed");
       }
-
-      refresh();
-    } catch (err) {
-      console.error("Status update error:", err?.response?.data || err.message || err);
-      toast.error(err?.response?.data?.message || "Failed to update status");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Status update failed");
+  }
+};
 
   return (
     <div className="relative">
