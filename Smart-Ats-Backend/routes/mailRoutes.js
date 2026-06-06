@@ -11,7 +11,13 @@ router.post("/send", async (req, res) => {
     }
 
     // optional: verify transporter before sending
-    await verifyTransporter();
+    const smtpOk = await verifyTransporter();
+
+    if (!smtpOk) {
+      return res.status(500).json({
+        message: "SMTP connection failed",
+      });
+    }
 
     const { to, subject, text, html } = req.body;
     if (!to || !subject) return res.status(400).json({ message: "Missing to or subject" });

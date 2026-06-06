@@ -86,13 +86,12 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    const smtp = await verifyTransporter();
-
-    console.log(
-      smtp
-        ? "SMTP Connected"
-        : "SMTP Not Connected"
-    );
+    try {
+      const smtp = await verifyTransporter();
+      console.log("SMTP Status:", smtp);
+    } catch (err) {
+      console.log("SMTP Check Skipped");
+    }
 
     app.use("/api/auth", authRoutes);
     app.use("/api/jobs", jobRoutes);
