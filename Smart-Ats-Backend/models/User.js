@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
         "hiringManager",
         "candidate",
       ],
-      default: "candidate",
+      default: "recruiter",
     },
   },
   {

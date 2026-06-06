@@ -48,4 +48,12 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  const smtp = await verifyTransporter();
+
+  if (smtp) {
+    console.log("✅ SMTP Connected Successfully");
+  } else {
+    console.log("❌ SMTP Connection Failed");
+  }
+
 });
