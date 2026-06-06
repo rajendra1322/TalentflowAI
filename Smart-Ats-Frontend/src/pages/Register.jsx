@@ -6,7 +6,7 @@ import { toast } from "sonner";
 export default function Register() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "Candidate" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "Recruiter" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
