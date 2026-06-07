@@ -26,7 +26,11 @@ router.post("/send", async (req, res) => {
 
     return res.json({ ok: true, info });
   } catch (err) {
-    console.error("Mail send error:", err && err.message ? err.message : err);
+    console.error("MAIL ERROR FULL:");
+    console.error(err);
+    console.error(err.code);
+    console.error(err.response);
+    console.error(err.responseCode);
     return res.status(500).json({ message: err && err.message ? err.message : "Failed to send mail" });
   }
 });

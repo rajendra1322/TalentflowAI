@@ -1,54 +1,28 @@
-import nodemailer from "nodemailer";
+import { BrevoClient } from "@getbrevo/brevo";
 
-
-console.log("HOST:", process.env.SMTP_HOST);
-console.log("PORT:", process.env.SMTP_PORT);
-console.log("USER:", process.env.SMTP_USER);
-console.log("PASS:", !!process.env.SMTP_PASS);
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
+const client = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY,
 });
 
 export const isMailConfigured = () => {
-  return !!(
-    process.env.SMTP_HOST &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS
-  );
+  return !!process.env.BREVO_API_KEY;
 };
 
 export const verifyTransporter = async () => {
-  try {
-    await transporter.verify();
-    console.log("SMTP Connected");
-    return true;
-  } catch (err) {
-    console.error("SMTP verify failed:", err.message);
-    return false;
-  }
+  const ok = isMailConfigured();
+  console.log(ok ? "Brevo API Ready" : "Brevo API Key Missing");
+  return ok;
 };
 
-export async function sendMail({
-  to,
-  subject,
-  text,
-  html,
-}) {
-  return transporter.sendMail({
-    from: process.env.SMTP_FROM,
-    to,
+export async function sendMail({ to, subject, text, html }) {
+  return client.transactionalEmails.sendTransacEmail({
+    sender: {
+      name: process.env.SMTP_FROM_NAME || "TalentFlow AI",
+      email: "rajendraacharyarr@gmail.com",
+    },
+    to: [{ email: to }],
     subject,
-    text,
-    html,
+    htmlContent: html || `<p>${text}</p>`,
   });
 }
 
