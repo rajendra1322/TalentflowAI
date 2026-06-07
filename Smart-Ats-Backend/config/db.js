@@ -5,10 +5,9 @@ export const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
       serverSelectionTimeoutMS: 10000,
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected Successfully`);
   } catch (error) {
     console.error("DB Error:", error.message || error);
-    // Don't exit immediately; let the caller decide. For local dev you may want to exit.
-    // process.exit(1);
+    process.exit(1); // stop server if DB fails — no point running without DB
   }
 };

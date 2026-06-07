@@ -1,6 +1,5 @@
 export const getRecommendation = (score, candidateSkills = [], jobSkills = []) => {
   let label = "Weak Match";
-  let reason = [];
 
   if (score >= 85) {
     label = "Strong Match";
@@ -9,15 +8,16 @@ export const getRecommendation = (score, candidateSkills = [], jobSkills = []) =
   } else if (score >= 40) {
     label = "Average Match";
   }
+  // below 40 stays "Weak Match"
 
-  // Explainability logic
-  const matched = candidateSkills.filter((s) =>
-    jobSkills.includes(s)
-  );
+  // normalize both arrays to lowercase before comparing
+  const normalizedCandidate = candidateSkills.map(s => s.toLowerCase().trim());
+  const normalizedJob = jobSkills.map(s => s.toLowerCase().trim());
 
-  const missing = jobSkills.filter(
-    (s) => !candidateSkills.includes(s)
-  );
+  const matched = normalizedJob.filter(s => normalizedCandidate.includes(s));
+  const missing = normalizedJob.filter(s => !normalizedCandidate.includes(s));
+
+  const reason = [];
 
   if (matched.length) {
     reason.push(`Matched: ${matched.join(", ")}`);

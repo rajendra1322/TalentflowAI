@@ -8,23 +8,33 @@ import {
 } from "../controllers/candidateController.js";
 
 import { upload } from "../middleware/uploads.js";
-import { protect, requireRole } from "../middleware/auth.js";
+import { protect, requireRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // CREATE CANDIDATE (WITH RESUME UPLOAD)
+//  public — candidates apply without an account
 router.post("/", upload.single("resume"), addCandidate);
 
 // GET ALL CANDIDATES
-router.get("/", getCandidates);
+//  protected — only logged in staff can view all candidates
+router.get("/", protect, getCandidates);
 
 // SEARCH CANDIDATES
-router.get("/search", searchCandidates);
+// protected — same as above
+router.get("/search", protect, searchCandidates);
 
-// UPDATE STATUS (protected)
-router.put("/:id/status", protect, requireRole(["recruiter", "hiringmanager", "admin"]), updateCandidateStatus);
+// UPDATE STATUS
+//  protected — only recruiters, hiring managers, admins
+router.put(
+  "/:id/status",
+  protect,
+  requireRole(["recruiter", "hiringmanager", "admin"]),
+  updateCandidateStatus
+);
 
 // REPARSE RESUME
-router.post("/:id/reparse", reparseCandidate);
+// protected — only logged in staff
+router.post("/:id/reparse", protect, requireRole(["recruiter", "hiringmanager", "admin"]), reparseCandidate);
 
 export default router;

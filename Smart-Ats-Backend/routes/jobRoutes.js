@@ -1,10 +1,12 @@
 import express from "express";
 import { createJob, getJobs } from "../controllers/jobController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", protect, getJobs);
-router.post("/", protect, createJob);
+
+// only recruiters and admins can post jobs
+router.post("/", protect, requireRole(["recruiter", "admin"]), createJob);
 
 export default router;

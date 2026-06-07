@@ -6,9 +6,7 @@ import { parseResume } from "../utils/resumeParser.js";
 import { extractSkills } from "../utils/extractSkills.js";
 import { sendMail } from "../utils/email.js";
 
-
 // NORMALIZE SKILLS HELPER
-
 const normalizeSkills = (skills) => {
     if (!skills) return [];
 
@@ -26,9 +24,7 @@ const normalizeSkills = (skills) => {
     return [];
 };
 
-
 // ADD CANDIDATE
-
 export const addCandidate = async (req, res) => {
     try {
         const { name, email, phone, skills, experience, jobId } = req.body;
@@ -36,7 +32,6 @@ export const addCandidate = async (req, res) => {
 
         let resumeUrl = "";
 
-        // If a file was uploaded, upload to Cloudinary and get URL
         if (req.file) {
             try {
                 const { uploadBuffer } = await import("../utils/cloudinary.js");
@@ -44,16 +39,17 @@ export const addCandidate = async (req, res) => {
                 resumeUrl = result?.secure_url || "";
             } catch (cloudErr) {
                 console.error("Cloudinary upload failed:", cloudErr?.message || cloudErr);
-                // Fallback: leave resumeUrl empty
                 resumeUrl = "";
             }
         }
 
+        //  check job exists before anything else
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({ message: "Job not found" });
         }
 
+        //  check duplicate before creating
         const existing = await Candidate.findOne({ email: normalizedEmail, jobId });
         if (existing) {
             return res.status(400).json({
@@ -63,39 +59,29 @@ export const addCandidate = async (req, res) => {
 
         let candidateSkills = normalizeSkills(skills);
 
-        // If candidate provided skills via form, prefer those.
-        // Otherwise, fall back to resume parsing when a file is uploaded.
+        //  parse resume only if no manual skills provided
         if ((!candidateSkills || candidateSkills.length === 0) && req.file) {
             try {
-                // parse from buffer (no disk I/O)
                 const resumeText = await parseResume(req.file.buffer);
                 candidateSkills = extractSkills(resumeText);
             } catch (parseErr) {
-                console.warn('Resume parse failed, continuing with empty skills', parseErr?.message || parseErr);
+                console.warn("Resume parse failed, continuing with empty skills:", parseErr?.message || parseErr);
                 candidateSkills = [];
             }
         }
 
         const jobSkills = normalizeSkills(job.skills);
 
-        
-        // SCORE + RECOMMENDATION
-       
         const matchScore = scoreCandidate(candidateSkills, jobSkills);
 
         const rec = getRecommendation(matchScore);
+        const recommendation = typeof rec === "string" ? rec : rec?.label || "Not Evaluated";
 
-        const recommendation =
-            typeof rec === "string" ? rec : rec?.label || "Not Evaluated";
-
+        //  auto status based on score
         let status = "Applied";
-
         if (matchScore >= 85) status = "Interview";
         else if (matchScore >= 70) status = "Shortlisted";
 
-       
-        // CREATE CANDIDATE
-      
         const candidate = await Candidate.create({
             name,
             email: normalizedEmail,
@@ -111,43 +97,45 @@ export const addCandidate = async (req, res) => {
 
         return res.status(201).json(candidate);
     } catch (err) {
-        console.error(err);
+        console.error("addCandidate error:", err);
         return res.status(500).json({ message: err.message });
     }
 };
 
-
 // GET ALL CANDIDATES
-
 export const getCandidates = async (req, res) => {
     try {
         const candidates = await Candidate.find().populate("jobId");
         return res.json(candidates);
     } catch (err) {
+        console.error("getCandidates error:", err);
         return res.status(500).json({ message: err.message });
     }
 };
 
-
 // UPDATE STATUS
-
 export const updateCandidateStatus = async (req, res) => {
     try {
         const { status } = req.body;
+
+        //  fixed: use "new: true" instead of returnDocument, populate jobId directly
         const candidate = await Candidate.findByIdAndUpdate(
             req.params.id,
             { status },
-            { returnDocument: "after" }
-        );
+            { new: true }
+        ).populate("jobId");
 
-        // If moved to Interview, send professional HTML + text email
-        if (candidate && status === "Interview") {
+        //  proper 404 response if candidate not found
+        if (!candidate) {
+            return res.status(404).json({ message: "Candidate not found" });
+        }
+
+        //  send email only from backend, job already populated above
+        if (status === "Interview") {
             try {
-                const job = await Job.findById(candidate.jobId);
-
-                const subject = `Interview Invitation - ${job?.title || "Opportunity"}`;
-
+                const job = candidate.jobId;
                 const sender = process.env.SMTP_FROM_NAME || "Recruiting Team";
+                const subject = `Interview Invitation - ${job?.title || "Opportunity"}`;
 
                 const html = `
                     <div style="font-family: Arial, sans-serif; color: #111;">
@@ -162,51 +150,63 @@ export const updateCandidateStatus = async (req, res) => {
 
                 await sendMail({ to: candidate.email, subject, text, html });
             } catch (mailErr) {
-                console.error("Failed to send interview mail:", mailErr);
+                // email failure should NOT fail the status update
+                console.error("Failed to send interview mail:", mailErr?.message || mailErr);
             }
         }
 
         return res.json(candidate);
     } catch (err) {
+        console.error("updateCandidateStatus error:", err);
         return res.status(500).json({ message: err.message });
     }
 };
 
 // REPARSE RESUME
-
 export const reparseCandidate = async (req, res) => {
     try {
         const { id } = req.params;
         const candidate = await Candidate.findById(id);
-        if (!candidate) return res.status(404).json({ message: "Candidate not found" });
 
-        if (!candidate.resumeUrl) return res.status(400).json({ message: "No resume available" });
+        if (!candidate) {
+            return res.status(404).json({ message: "Candidate not found" });
+        }
 
-        // resumeUrl may be a cloudinary URL; parseResume now supports URLs
+        if (!candidate.resumeUrl) {
+            return res.status(400).json({ message: "No resume available for this candidate" });
+        }
+
         const resumeText = await parseResume(candidate.resumeUrl);
+
+        //  warn if resume text came back empty
+        if (!resumeText || resumeText.trim().length === 0) {
+            return res.status(422).json({ message: "Could not extract text from resume" });
+        }
+
         const skills = extractSkills(resumeText);
 
-        const updated = await Candidate.findByIdAndUpdate(id, { skills }, { returnDocument: "after" });
+        const updated = await Candidate.findByIdAndUpdate(
+            id,
+            { skills },
+            { new: true }
+        );
 
         return res.json({ ok: true, skills, updated });
     } catch (err) {
-        console.error("Reparse error:", err);
+        console.error("reparseCandidate error:", err);
         return res.status(500).json({ message: err.message });
     }
 };
 
-
 // SEARCH CANDIDATES
-
 export const searchCandidates = async (req, res) => {
     try {
-        const { search, status, minScore, maxScore } = req.query;
+        const { search, status, minScore, maxScore, jobId } = req.query;
 
         let filter = {};
 
-        // allow filtering by jobId for job-specific pipelines
-        if (req.query.jobId) {
-            filter.jobId = req.query.jobId;
+        if (jobId) {
+            filter.jobId = jobId;
         }
 
         if (search) {
@@ -219,17 +219,17 @@ export const searchCandidates = async (req, res) => {
 
         if (status) filter.status = status;
 
-        if (minScore && maxScore) {
-            filter.matchScore = {
-                $gte: Number(minScore),
-                $lte: Number(maxScore),
-            };
+        //  handle partial score filters (not just when both are present)
+        if (minScore || maxScore) {
+            filter.matchScore = {};
+            if (minScore) filter.matchScore.$gte = Number(minScore);
+            if (maxScore) filter.matchScore.$lte = Number(maxScore);
         }
 
         const candidates = await Candidate.find(filter).populate("jobId");
-
         return res.json(candidates);
     } catch (err) {
+        console.error("searchCandidates error:", err);
         return res.status(500).json({ message: err.message });
     }
 };
